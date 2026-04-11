@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/FabianAlmos/contfuncs-sdk/consts"
 	"log"
 	"net/http"
 
@@ -36,6 +37,6 @@ func Handle[In any, Out any](fn Handler[In, Out]) error {
 		json.NewEncoder(w).Encode(resp)
 	})
 
-	log.Printf("Function listening on port: %q\n", FnContainerPort)
-	return http.ListenAndServe(":"+FnContainerPort, nil)
+	log.Printf("Function listening on port: %q\n", consts.FnContainerPort)
+	return http.ListenAndServe(":"+consts.FnContainerPort, nil)
 }
