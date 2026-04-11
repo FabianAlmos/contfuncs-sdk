@@ -9,6 +9,10 @@ import (
 )
 
 func Handle[In any, Out any](fn Handler[In, Out]) error {
+	http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var req fn_http.Request[In]
 		if r.ContentLength > 0 {
