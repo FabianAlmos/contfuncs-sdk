@@ -16,7 +16,7 @@ type Client struct {
 
 func NewClient() *Client {
 	return &Client{
-		gatewayURL: "127.0.0.1:8080",
+		gatewayURL: "http://127.0.0.1:8080",
 		httpClient: &http.Client{},
 	}
 }
