@@ -36,6 +36,6 @@ func Handle[In any, Out any](fn Handler[In, Out]) error {
 		json.NewEncoder(w).Encode(resp)
 	})
 
-	log.Printf("Function listening on port: %q\n", port)
-	return http.ListenAndServe(":"+port, nil)
+	log.Printf("Function listening on port: %q\n", FnContainerPort)
+	return http.ListenAndServe(":"+FnContainerPort, nil)
 }

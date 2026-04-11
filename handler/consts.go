@@ -1,3 +1,3 @@
 package handler
 
-const port = "8080"
+const FnContainerPort = "8080"
