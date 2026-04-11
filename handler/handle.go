@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"contfunc-sdk/fn_http"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/FabianAlmos/contfuncs-sdk/fn_http"
 )
 
 func Handle[In any, Out any](fn Handler[In, Out]) error {
