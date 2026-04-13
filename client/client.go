@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 type Client struct {
@@ -15,8 +16,12 @@ type Client struct {
 }
 
 func NewClient() *Client {
+	gatewayURL := os.Getenv("GATEWAY_URL")
+	if gatewayURL == "" {
+		gatewayURL = "http://127.0.0.1:8080"
+	}
 	return &Client{
-		gatewayURL: "http://127.0.0.1:8080",
+		gatewayURL: gatewayURL,
 		httpClient: &http.Client{},
 	}
 }
