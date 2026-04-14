@@ -63,14 +63,19 @@ func (c *Client) Invoke(ctx context.Context, input contfuncs.InvokeInput, opts .
 		StatusCode: resp.StatusCode,
 	}
 	if out.StatusCode >= 400 {
-		b, _ := io.ReadAll(resp.Body)
-		out.Err = fmt.Errorf("%s", b)
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read response body, err: %w", err)
+		}
+		out.Err = fmt.Errorf("function responded with, err: %s", b)
 		return &out, nil
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(out.Data); err != nil {
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return nil, fmt.Errorf("decode response, err: %w", err)
 	}
+	out.Data = data
 
 	return &out, nil
 }

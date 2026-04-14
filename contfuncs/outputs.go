@@ -1,7 +1,7 @@
 package contfuncs
 
 type InvokeOutput struct {
-	Data       any
+	Data       []byte
 	StatusCode int
 	Err        error
 }
