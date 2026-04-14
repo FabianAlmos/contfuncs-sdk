@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/FabianAlmos/contfuncs-sdk/contfuncs"
 	"io"
 	"net/http"
 	"os"
@@ -26,39 +27,50 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Invoke(ctx context.Context, fnName string, in any, out any) error {
+func (c *Client) Invoke(ctx context.Context, input contfuncs.InvokeInput, opts ...contfuncs.InvokeOption) (*contfuncs.InvokeOutput, error) {
 	var body io.Reader
-	if in != nil {
-		data, err := json.Marshal(in)
+	if input.Payload != nil {
+		data, err := json.Marshal(input.Payload)
 		if err != nil {
-			return fmt.Errorf("marshal payload, err: %w", err)
+			return nil, fmt.Errorf("marshal payload, err: %w", err)
 		}
 		body = bytes.NewReader(data)
 	}
 
-	url := fmt.Sprintf("%s/run/%s", c.gatewayURL, fnName)
+	invokeOptions := contfuncs.NewInvokeOptions()
+	for _, opt := range opts {
+		opt(invokeOptions)
+	}
+
+	url := fmt.Sprintf("%s/run/%s", c.gatewayURL, input.FunctionName)
+	if invokeOptions.Version != "" {
+		url = fmt.Sprintf("%s?version=%s", url, invokeOptions.Version)
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
-		return fmt.Errorf("create request, err: %w", err)
+		return nil, fmt.Errorf("create request, err: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("invoke function %s, err: %w", fnName, err)
+		return nil, fmt.Errorf("invoke function %s, err: %w", input.FunctionName, err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
+	out := contfuncs.InvokeOutput{
+		StatusCode: resp.StatusCode,
+	}
+	if out.StatusCode >= 400 {
 		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("function %s returned error %d: %s", fnName, resp.StatusCode, b)
+		out.Err = fmt.Errorf("%s", b)
+		return &out, nil
 	}
 
-	if out != nil {
-		if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
-			return fmt.Errorf("decode response, err: %w", err)
-		}
+	if err := json.NewDecoder(resp.Body).Decode(out.Data); err != nil {
+		return nil, fmt.Errorf("decode response, err: %w", err)
 	}
 
-	return nil
+	return &out, nil
 }
