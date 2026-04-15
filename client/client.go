@@ -59,23 +59,20 @@ func (c *Client) Invoke(ctx context.Context, input contfuncs.InvokeInput, opts .
 	}
 	defer resp.Body.Close()
 
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response body, err: %w", err)
+	}
+
 	out := contfuncs.InvokeOutput{
 		StatusCode: resp.StatusCode,
 	}
-	if out.StatusCode >= 400 {
-		b, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("read response body, err: %w", err)
-		}
-		out.Err = fmt.Errorf("function responded with, err: %s", b)
+
+	if resp.Header.Get("X-Function-Error") == "true" {
+		out.Err = fmt.Errorf("%s", string(b))
 		return &out, nil
 	}
 
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("decode response, err: %w", err)
-	}
-	out.Data = data
-
+	out.Data = b
 	return &out, nil
 }

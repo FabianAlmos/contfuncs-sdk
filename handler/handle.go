@@ -3,10 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/FabianAlmos/contfuncs-sdk/consts"
 	"log"
 	"net/http"
 
+	"github.com/FabianAlmos/contfuncs-sdk/consts"
 	"github.com/FabianAlmos/contfuncs-sdk/fn_http"
 )
 
@@ -26,15 +26,16 @@ func Handle[In any, Out any](fn Handler[In, Out]) error {
 			}
 		}
 
-		resp, err := fn(r.Context(), req)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, err.Error())
+		resp := fn(r.Context(), req)
+		if resp.Err != nil {
+			w.Header().Set("X-Function-Error", "true")
+			writeError(w, resp.StatusCode, resp.Err.Error())
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resp)
+		w.WriteHeader(resp.StatusCode)
+		json.NewEncoder(w).Encode(resp.Data)
 	})
 
 	log.Printf("Function listening on port: %q\n", consts.FnContainerPort)
